@@ -1,7 +1,12 @@
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Deploying Contract on local node
-First, start a local node
+First, yarn install (you might need to update your node version)
+```bash
+yarn install
+```
+
+start a local node
 ```bash
 npx hardhat node
 ```
