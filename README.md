@@ -19,7 +19,7 @@ npx hardhat run --network localhost scripts/deploy-lottery.js
 ```
 
 You can now run the site locally and interact with the contract through the UI.
-
+If your contract address is wrong, take the output from the deploy-lottery script and update `initializeLotteryContract` in index.js
 ## Running Locally
 
 First, run the development server:
