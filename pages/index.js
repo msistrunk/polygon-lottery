@@ -11,9 +11,10 @@ export default function Lotto() {
   const [lotteryContract, setLotteryContract] = useState()
   const [lotteryPot, setLotteryPot] = useState()
   const [lotteryPlayers, setPlayers] = useState([])
-  const [lotteryHistory, setLotteryHistory] = useState([])
+  const [previousWinner, setPreviousWinner] = useState()
   const [lotteryId, setLotteryId] = useState()
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const [contractOwner, setContractOwner] = useState()
 
   const initializeLotteryContract = (web3) => {
@@ -21,7 +22,7 @@ export default function Lotto() {
         LotteryContract.abi,
         "0x5FbDB2315678afecb367f032d93F642f64180aa3"
     )
-}
+  }
 
   useEffect(() => {
     updateState()
@@ -46,25 +47,24 @@ export default function Lotto() {
     setPlayers(players)
   }
 
-  const getHistory = async (id) => {
-    setLotteryHistory([])
-    for (let i = parseInt(id); i > 0; i--) {
-      const winnerAddress = await lotteryContract.methods.lotteryHistory(i).call()
-      const historyObj = {}
-      historyObj.id = i
-      historyObj.address = winnerAddress
-      setLotteryHistory(lotteryHistory => [...lotteryHistory, historyObj])
-    }
+  const getPastWinner = async (id) => {
+    setPreviousWinner()
+    const winnerAddress = await lotteryContract.methods.lotteryHistory(id-1).call()
+    const historyObj = {}
+    historyObj.id = id
+    historyObj.address = winnerAddress
+    setPreviousWinner(historyObj)
   }
 
   const getLotteryId = async () => {
     const lotteryId = await lotteryContract.methods.lotteryId().call()
     setLotteryId(lotteryId)
-    await getHistory(lotteryId)
+    await getPastWinner(lotteryId)
   }
 
   const enterLotteryHandler = async () => {
     setError('')
+    setSuccess('')
     try {
       await lotteryContract.methods.enter().send({
         from: address,
@@ -72,6 +72,7 @@ export default function Lotto() {
         gas: 300000,
         gasPrice: null
       })
+      setSuccess('Successfully Entered')
       updateState()
     } catch(err) {
       setError(err.message)
@@ -120,7 +121,6 @@ export default function Lotto() {
     }
   }
 
-
   return (
     <div>
       <Head>
@@ -132,7 +132,7 @@ export default function Lotto() {
 
       <main className={styles.main}>
         <div className={styles.nav}>
-          <button className={styles.headerButton} onClick={connectWalletHandler}>Connect Wallet</button>
+          <h3>Lottery</h3>
         </div>
         <div className={styles.content}>
             { 
@@ -142,7 +142,8 @@ export default function Lotto() {
                   <h2 className={styles.light}>POT</h2>
                   <h2 className={styles.light}>{lotteryPot} ETHER</h2>
                   <button className={styles.button} onClick={enterLotteryHandler}>Play now</button>
-                  <p>{error}</p>
+                  { error && <p>{error}</p> }
+                  { success && <p>{success}</p>}
                 </div>
             }
             {
@@ -151,26 +152,23 @@ export default function Lotto() {
                   <h1 className={styles.light}>ETHEREUM LOTTERY</h1>
                   <p>Welcome to an ethereum lottery dapp. Please connect your wallet to get started.</p>
                   <button className={styles.button} onClick={connectWalletHandler}>Connect Wallet</button>
-                  <p>{error}</p>
+                  { error && <p>{error}</p> }
                 </div>
             }
           {isOwner &&
           <div className={styles.row}>
             <div className={styles.container}>
-              <h3 className={styles.light}>Past Winners</h3>
-              <button className={styles.button} onClick={pickWinnerHandler}>Pick Winner</button>
+              <h3 className={styles.light}>Previous Winner</h3>
               {
-                (lotteryHistory && lotteryHistory.length > 0) && lotteryHistory.map(item => {
-                  if (lotteryId != item.id) {
-                    return <div className="history-entry mt-3" key={item.id}>
-                      <div>Lottery #{item.id} winner:</div>
+                (previousWinner) && 
+                    <div>
+                      <div>Lottery #{previousWinner.id} winner:</div>
                       <div>
-                        <p>{item.address}</p>
+                        <p>{previousWinner.address}</p>
                       </div>
                     </div>
-                  }
-                })
               }
+              <button className={styles.button} onClick={pickWinnerHandler}>Pick New Winner</button>
             </div>
             <div className={styles.container}>
               <h3 className={styles.light}>Current Players in Pool</h3>
